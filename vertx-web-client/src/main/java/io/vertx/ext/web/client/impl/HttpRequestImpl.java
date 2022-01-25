@@ -50,7 +50,7 @@ public class HttpRequestImpl<T> implements HttpRequest<T> {
   final WebClientOptions options;
   SocketAddress serverAddress;
   MultiMap queryParams;
-  MultiMap templateParams;
+  Variables templateParams;
   HttpMethod method;
   String protocol;
   private Integer port;
@@ -170,11 +170,7 @@ public class HttpRequestImpl<T> implements HttpRequest<T> {
   public String computeURI() {
     if (uri instanceof UriTemplate) {
       // Remove that later
-      Variables variables = Variables.variables();
-      templateParams.forEach(entry -> {
-        variables.set(entry.getKey(), entry.getValue());
-      });
-      return ((UriTemplate)uri).expandToString(variables);
+      return ((UriTemplate)uri).expandToString(templateParams());
     } else {
       String uri = (String) this.uri;
       if (queryParams != null && queryParams.size() > 0) {
@@ -254,12 +250,6 @@ public class HttpRequestImpl<T> implements HttpRequest<T> {
   }
 
   @Override
-  public HttpRequest<T> addTemplateParam(String paramName, String paramValue) {
-    templateParams().add(paramName, paramValue);
-    return this;
-  }
-
-  @Override
   public HttpRequest<T> setTemplateParam(String paramName, String paramValue) {
     templateParams().set(paramName, paramValue);
     return this;
@@ -304,12 +294,12 @@ public class HttpRequestImpl<T> implements HttpRequest<T> {
   }
 
   @Override
-  public MultiMap templateParams() {
+  public Variables templateParams() {
     if (!(uri instanceof UriTemplate)) {
       throw new IllegalStateException();
     }
     if (templateParams == null) {
-      templateParams = MultiMap.caseInsensitiveMultiMap();
+      templateParams = Variables.variables();
     }
     return templateParams;
   }
